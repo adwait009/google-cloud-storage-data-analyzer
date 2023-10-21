@@ -8,11 +8,6 @@ from tqdm import tqdm  # Import tqdm
 load_dotenv()
 
 
-def get_content_type(blob):
-    # Get the content type (media type) of the blob from its metadata
-    return blob.content_type or "Unknown"
-
-
 def main():
     project_id = os.getenv("GCP_PROJECT_ID")
     bucket_name = os.getenv("GCP_BUCKET_NAME")
@@ -30,13 +25,12 @@ def main():
 
     # Get list of objects in the bucket with tqdm
     for blob in tqdm(bucket.list_blobs(), desc="Processing files"):
-        content_type = get_content_type(blob)  # Get content type from metadata
         blob_info.append(
             {
                 "Name": blob.name,
                 "Size": blob.size,
                 "Updated": blob.updated,
-                "Content Type": content_type,
+                "Content Type": blob.content_type,
             }
         )
 
