@@ -37,32 +37,39 @@ def main():
     # Create a DataFrame from blob_info list
     dfs = pd.DataFrame(blob_info)
 
-    # Calculate summary stats for sizes
-    size_stats = dfs["Size"].describe()
-    print(size_stats)
+    # Initialize lists to store stats
+    overall_stats = []
+    folder_stats = []
+    content_type_stats = []
+
+    # Get blobs as before
+
+    # Calculate overall bucket stats
+    overall_stats.append(dfs["Size"].describe().to_dict())
 
     # Group by folders
     dfs["Folder"] = dfs["Name"].apply(lambda x: x.split("/")[0])
     folder_groups = dfs.groupby("Folder")
 
-    # Add an extra layer for content type analysis under folder level
-    with open("results.csv", "w") as file:
-        size_stats.to_csv(file, header=["Size Statistics"])
-        file.write("\n")
+    # Group by folder
+    for name, group in folder_groups:
+        folder_stats.append({"Folder": name, **group["Size"].describe().to_dict()})
 
-        for name, group in folder_groups:
-            file.write(f"Folder: {name}\n")
-            group["Size"].describe().to_csv(file, header=["Folder Size Statistics"])
-            file.write("\n")
+        # Group by content types within the folder
+        content_type_groups = group.groupby("Content Type")
+        for content_type, content_type_group in content_type_groups:
+            content_type_stats.append(
+                {
+                    "Folder": name,
+                    "Content Type": content_type,
+                    **content_type_group["Size"].describe().to_dict(),
+                }
+            )
 
-            # Group by content types within the folder
-            content_type_groups = group.groupby("Content Type")
-            for content_type, content_type_group in content_type_groups:
-                file.write(f"Content Type: {content_type}\n")
-                content_type_group["Size"].describe().to_csv(
-                    file, header=["Content Type Size Statistics"]
-                )
-                file.write("\n")
+    # Write stats to CSV
+    pd.DataFrame(overall_stats).to_csv("bucket_stats.csv", index=False)
+    pd.DataFrame(folder_stats).to_csv("folder_stats.csv", index=False)
+    pd.DataFrame(content_type_stats).to_csv("content_type_stats.csv", index=False)
 
 
 if __name__ == "__main__":
