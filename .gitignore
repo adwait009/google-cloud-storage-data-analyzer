@@ -166,3 +166,6 @@ cython_debug/
 # Scratchpad files
 scratchpad.ipynb
 *.csv
+
+
+!sample_gcp_credential.json
